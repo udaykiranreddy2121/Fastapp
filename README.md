@@ -23,9 +23,7 @@ This project implements a rule evaluation system using FastAPI. It allows users 
 To set up the project, follow these steps:
 
 1. Clone this repository:
-   ```bash
-  it clone https://github.com/udaykiranreddy2121/your-repo-name.git
-   cd Fastapp
+ clone https://github.com/udaykiranreddy2121/your-repo-name.git
 
    Install the required packages:
    pip install fastapi uvicorn pyngrok pyparsing
