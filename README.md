@@ -1,145 +1,69 @@
-# FastAPI Rule Evaluation System
+# Rule Engine API
 
-A small rule-engine API that parses boolean business rules into an Abstract Syntax Tree (AST), combines rules, and evaluates them against input records.
+A Python and FastAPI project that parses eligibility expressions into an Abstract Syntax Tree (AST), combines saved rules with AND logic, and evaluates the resulting rules against JSON input.
 
-## Project overview
+## Features
 
-This project demonstrates:
-- Parsing comparison expressions with `pyparsing`
-- Representing conditions and boolean operators with an AST
-- Exposing rule creation, combination, and evaluation through FastAPI
-- Validating API requests with Pydantic
+- Parse comparison expressions such as `age >= 30` and `department = 'Sales'`.
+- Support parentheses and logical `AND` / `OR` operators (`AND` has higher precedence).
+- Create and store rules in memory.
+- Combine two or more saved rules using AND.
+- Evaluate a saved rule against supplied JSON data.
+- Interactive API documentation through Swagger UI.
 
-## Technology stack
+## Tech stack
 
-- Python
-- FastAPI
-- Pydantic
-- pyparsing
-- Uvicorn
-
-## Repository structure
-
-```text
-Fastapp/
-├── my_fastapi_app_py.py
-└── README.md
-```
+Python, FastAPI, Pydantic, Uvicorn, recursive-descent parsing, Abstract Syntax Trees.
 
 ## Setup
-
-Use Python 3.10 or later.
 
 ```bash
 git clone https://github.com/udaykiranreddy2121/Fastapp.git
 cd Fastapp
 python -m venv .venv
-```
-
-Activate the virtual environment:
-
-**Windows PowerShell**
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-**macOS / Linux**
-```bash
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-python -m pip install fastapi uvicorn pyparsing
-```
-
-## Run the API
-
-The original source file was developed in Google Colab and includes notebook-specific commands and an ngrok section. Run it in its original notebook environment unless you have converted those notebook commands into standard Python first.
-
-For a local FastAPI deployment, the intended launch pattern is:
-
-```bash
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
 uvicorn my_fastapi_app_py:app --reload
 ```
 
-If the module currently fails to import because of notebook-only syntax, remove notebook magics (such as `!pip install`) and keep package installation in the terminal. Do not put API tokens in source code.
+Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for the interactive API.
 
-When the server is running, open:
-- API root: http://127.0.0.1:8000/
-- Interactive Swagger docs: http://127.0.0.1:8000/docs
-
-## API endpoints
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/create_rule/` | Parse a rule and return its AST / rule identifier |
-| POST | `/combine_rules/` | Combine stored rules using AND |
-| POST | `/evaluate_rule/` | Evaluate an AST against a data record |
-
-Example rule expressions supported by the parser include:
-
-```text
-age > 30
-department = 'Sales'
-(age > 30 AND department = 'Sales') OR salary >= 50000
-```
-
-The parser uses AND/OR precedence and comparison operators defined in the source. Check the implementation before relying on additional operators or data types.
-
-## Example request shapes
+## Example requests
 
 Create a rule:
 
 ```json
-{
-  "rule": "age > 30"
-}
+POST /create_rule/
+{"rule": "(age >= 30 AND department = 'Sales') OR salary > 50000"}
 ```
 
-Evaluate an AST using the structure returned by the create-rule endpoint:
+Evaluate the returned `rule_id`:
 
 ```json
-{
-  "ast": {
-    "type": "operand",
-    "value": {
-      "var": "age",
-      "op": ">",
-      "val": "30"
-    }
-  },
-  "data": {
-    "age": 35
-  }
-}
+POST /evaluate_rule/
+{"rule_id": 1, "data": {"age": 35, "department": "Sales", "salary": 42000}}
 ```
 
-The exact AST response serialization depends on the current implementation. Use the live Swagger documentation to inspect request and response schemas.
+Combine existing rules:
 
-## Current limitations
+```json
+POST /combine_rules/
+{"rule_ids": [1, 2]}
+```
 
-- Rules are stored in memory and are lost when the process restarts.
-- The rule store is not persistent and is not designed for multi-worker deployment.
-- Rule combination currently uses AND.
-- The source was originally authored in a Colab notebook; notebook-specific commands and the ngrok setup should be separated before production deployment.
-- Add automated tests for invalid rule syntax, missing fields, unknown rule IDs, numeric/string comparisons, and nested AND/OR expressions before treating the API as production-ready.
+The combined rule is stored as a new rule and can be evaluated using its returned ID.
 
-## Security
+## Limitations
 
-- Never commit ngrok tokens, API keys, passwords, or other credentials.
-- If a credential has ever been committed, revoke/rotate it at the provider immediately. Removing it from the latest file does not remove it from Git history.
-- Use environment variables or a secrets manager for local development and deployment.
+- Rules are stored in memory and are cleared when the server restarts.
+- This is a learning/demo project, not a production authorization engine.
+- Supports scalar string and numeric comparisons; it does not execute arbitrary Python code.
 
 ## Future improvements
 
-- Persist rules in SQLite or PostgreSQL
-- Add rule retrieval and deletion endpoints
-- Add stronger request validation and typed AST models
-- Add unit and API tests
-- Add Docker configuration and CI checks
+Persistent storage, authentication, rule versioning, richer validation, and automated test coverage.
 
 ## License
 
-No license file was present when this README was prepared. Add a license only after choosing the terms under which you want others to use the project.
+No license is specified yet. Add a license file if you want others to reuse the code.
